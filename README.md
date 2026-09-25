@@ -7,6 +7,7 @@
 <img src="https://img.shields.io/badge/php-%23777BB4.svg?style=for-the-badge&logo=php&logoColor=white" alt="PHP" />
 </div>
 <img src="img/tela-inicial.png" alt="tela inicial do site" />
+
 Projeto de loja virtual de roupas e acessórios desenvolvido pelos alunos do curso técnico em Informática da **ETERJ** para a **FECIP 2025**.
 
 O projeto conta com diferenciais de acessibilidade, incluindo modo escuro, layout responsivo e assistente virtual via chatbot FAQ integrado.
