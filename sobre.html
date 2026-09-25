@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sobre Nós - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    
+    <style>
+        /* Estilos específicos para a página Sobre */
+        .sobre-container {
+            padding: 120px 5% 4rem;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+        .sobre-container h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .sobre-container p {
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <button class="darkmode-btn" id="darkModeToggle"><ion-icon name="moon-outline"></ion-icon></button>
+        <button class="btn-sidebar" id="openSidebar">☰</button>
+        <div class="logo"><h1>Caminho Livre</h1></div>
+    </div>
+    <nav class="cabecalho-link">
+        <a href="index.html">Início</a>
+        <a href="acessorios.html">Acessórios</a>
+        <a href="calcados.html">Calçados</a>
+        <div id="nav-links-dinamicos" style="display: flex; gap: 2rem; align-items: center;"></div>
+        <a href="meus_pedidos.html">Meus Pedidos</a>
+    </nav>
+    <div class="icon">
+        <a href="carrinho.html" aria-label="Carrinho de Compras"><ion-icon name="cart-outline"></ion-icon></a>
+    </div>
+</header>
+
+<div class="sidebar" id="sidebar">
+    <a class="closebtn" href="javascript:void(0)" id="closeSidebar">&times;</a>
+    <a href="index.html"><ion-icon name="home"></ion-icon> Início</a>
+    <a href="acessorios.html"><ion-icon name="glasses"></ion-icon> Acessórios</a>
+    <a href="calcados.html"><span class="iconify" data-height="32" data-icon="mdi:shoe-sneaker"></span> Calçados</a>
+    <a href="index.html#produtos"><ion-icon name="shirt"></ion-icon> Roupas</a>
+    <a href="meus_pedidos.html"><ion-icon name="cube-outline"></ion-icon> Meus Pedidos</a>
+    <a href="sobre.html"><ion-icon name="information-circle-outline"></ion-icon> Sobre Nós</a>
+    <div id="sidebar-user-links" class="sidebar-user"></div>
+</div>
+
+<div id="main">
+    <main class="sobre-container">
+        <h2>Sobre a Caminho Livre</h2>
+        <p>
+            Bem-vindo à <strong>Caminho Livre</strong>, o seu destino para moda com propósito e liberdade de expressão. Nascemos da crença de que as roupas são mais do que apenas tecidos; são uma extensão da sua personalidade, uma forma de contar ao mundo quem você é sem dizer uma única palavra. Nosso nome reflete nossa filosofia: oferecer um caminho livre para que cada indivíduo explore e descubra seu próprio estilo.
+        </p>
+        <p>
+            Nossa missão é curar coleções que combinam conforto, qualidade e as últimas tendências, garantindo que você se sinta confiante e autêntico em qualquer ocasião. Desde peças casuais para o dia a dia até itens sofisticados para momentos especiais, cada produto é selecionado com cuidado, pensando na durabilidade e no design atemporal.
+        </p>
+        <p>
+            Na Caminho Livre, valorizamos a sustentabilidade e a produção consciente. Estamos comprometidos em trabalhar com fornecedores que compartilham dos nossos valores, buscando materiais ecológicos e processos que respeitem o meio ambiente. Acreditamos que a moda pode e deve ser uma força para o bem.
+        </p>
+        <p>
+            Junte-se a nós nesta jornada e encontre as peças que te inspiram a trilhar seu próprio caminho.
+        </p>
+    </main>
+</div>
+
+<script>
+    // ====================================================
+    // CONTROLE DA SIDEBAR
+    // ====================================================
+    const sidebar = document.getElementById("sidebar");
+    const openBtn = document.getElementById("openSidebar");
+    const closeBtn = document.getElementById("closeSidebar");
+    const main = document.getElementById("main");
+
+    if (openBtn && sidebar) {
+        openBtn.addEventListener("click", () => {
+            sidebar.style.width = "250px";
+            if (main) main.style.marginLeft = "250px";
+        });
+    }
+
+    if (closeBtn && sidebar) {
+        closeBtn.addEventListener("click", () => {
+            sidebar.style.width = "0";
+            if (main) main.style.marginLeft = "0";
+        });
+    }
+
+    // ====================================================
+    // MODO ESCURO
+    // ====================================================
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    if (darkModeToggle) {
+        const icon = darkModeToggle.querySelector("ion-icon");
+        const DOMElements = {
+            body: document.body,
+            icon: darkModeToggle.querySelector("ion-icon")
+        };
+
+        function atualizarIcone() {
+            const isDarkMode = DOMElements.body.classList.contains("dark-mode");
+            DOMElements.icon.setAttribute("name", isDarkMode ? "sunny-outline" : "moon-outline");
+        }
+
+        darkModeToggle.addEventListener("click", () => {
+            DOMElements.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", DOMElements.body.classList.contains("dark-mode"));
+            atualizarIcone();
+        });
+
+        if (localStorage.getItem("darkMode") === "true") {
+            DOMElements.body.classList.add("dark-mode");
+        }
+        atualizarIcone();
+    }
+    
+    // ====================================================
+    // ATUALIZAÇÃO DO CABEÇALHO (LOGIN/LOGOUT)
+    // ====================================================
+    async function atualizarCabecalhoUsuario() {
+        try {
+            const response = await fetch('verificarSessao.php');
+            const data = await response.json();
+            const desktop = document.getElementById('nav-links-dinamicos');
+            const mobile = document.getElementById('sidebar-user-links');
+            
+            if (data.logado) {
+                let admin = data.role === 'admin' ? '<a href="admin.html" style="color: #FFD700;">Painel Admin</a>' : '';
+                if (desktop) desktop.innerHTML = `${admin} <span style="color: #ccc; align-self: center;">Olá, ${data.nome}</span> <a href="logout.php">Sair</a>`;
+                if (mobile) mobile.innerHTML = `${admin} <a href="logout.php"><ion-icon name="log-out-outline"></ion-icon> Sair</a>`;
+            } else {
+                if (desktop) desktop.innerHTML = '<a href="login.html">Registrar-se</a>';
+                if (mobile) mobile.innerHTML = '<a href="login.html"><ion-icon name="person-outline"></ion-icon> Registrar-se</a>';
+            }
+        } catch (error) { 
+            console.error('Erro ao verificar a sessão:', error); 
+        }
+    }
+
+    // ====================================================
+    // CARREGAMENTO INICIAL DA PÁGINA
+    // ====================================================
+    document.addEventListener("DOMContentLoaded", () => {
+        atualizarCabecalhoUsuario();
+    });
+</script>
+
+</body>
+</html>

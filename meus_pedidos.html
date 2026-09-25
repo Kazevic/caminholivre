@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Meus Pedidos - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .pedidos-container {
+            padding: 120px 5% 4rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .pedido-item {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .pedido-header h3 { font-size: 1.2rem; }
+        .pedido-header span { font-size: 0.9rem; color: #777; }
+
+        .progress-bar {
+            position: relative;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin: 2rem 0;
+        }
+        .progress-bar-fill {
+            position: absolute;
+            height: 100%;
+            background-color: #007bff; /* Azul */
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+        .progress-bar-fill.entregue {
+            background-color: #28a745; /* Verde */
+        }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        body.dark-mode .pedido-item { background: #1e1e1e; border-color: #333; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="header-left">
+        <button class="darkmode-btn" id="darkModeToggle"><ion-icon name="moon-outline"></ion-icon></button>
+        <div class="logo"><h1>Caminho Livre</h1></div>
+    </div>
+    <nav class="cabecalho-link">
+        <a href="index.html">Início</a> <a href="acessorios.html">Acessórios</a> <a href="calcados.html">Calçados</a>
+        <a href="meus_pedidos.html">Meus Pedidos</a>
+    </nav>
+    <div class="icon"><a href="carrinho.html"><ion-icon name="cart-outline"></ion-icon></a></div>
+</header>
+
+<div id="main">
+    <main class="pedidos-container">
+        <h2>Acompanhamento de Pedidos</h2>
+        <div id="lista-pedidos">
+            </div>
+    </main>
+</div>
+
+<script>
+    // Script de Modo Escuro
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    if (darkModeToggle) {
+        const icon = darkModeToggle.querySelector("ion-icon");
+        function atualizarIcone() {
+            const isDarkMode = document.body.classList.contains("dark-mode");
+            icon.setAttribute("name", isDarkMode ? "sunny-outline" : "moon-outline");
+        }
+        darkModeToggle.addEventListener("click", () => {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+            atualizarIcone();
+        });
+        if (localStorage.getItem("darkMode") === "true") { document.body.classList.add("dark-mode"); }
+        atualizarIcone();
+    }
+
+    // Carregar Pedidos
+    async function carregarPedidos() {
+        const container = document.getElementById('lista-pedidos');
+        try {
+            const response = await fetch('buscarPedidosUsuario.php');
+            const pedidos = await response.json();
+
+            if (pedidos.status === 'erro') {
+                container.innerHTML = `<p>${pedidos.mensagem}</p>`;
+                return;
+            }
+
+            if (pedidos.length === 0) {
+                container.innerHTML = '<p>Você ainda não fez nenhum pedido.</p>';
+            } else {
+                container.innerHTML = pedidos.map(pedido => {
+                    const statusMap = {
+                        'Processando': { width: '10%', text: 'Processando' },
+                        'Em preparação': { width: '40%', text: 'Em preparação' },
+                        'Enviado': { width: '70%', text: 'Enviado' },
+                        'Entregue': { width: '100%', text: 'Entregue' }
+                    };
+                    const progresso = statusMap[pedido.status] || { width: '0%', text: 'Status desconhecido' };
+                    const isEntregue = pedido.status === 'Entregue' ? 'entregue' : '';
+
+                    return `
+                        <div class="pedido-item">
+                            <div class="pedido-header">
+                                <h3>Pedido #${pedido.id}</h3>
+                                <span>Realizado em: ${pedido.data_formatada}</span>
+                                <strong>Total: R$ ${parseFloat(pedido.total).toFixed(2)}</strong>
+                            </div>
+                            <h4>Status: ${progresso.text}</h4>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill ${isEntregue}" style="width: ${progresso.width};"></div>
+                            </div>
+                            <div class="progress-steps">
+                                <span>Processando</span>
+                                <span>Preparação</span>
+                                <span>Enviado</span>
+                                <span>Entregue</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar pedidos:', error);
+            container.innerHTML = '<p>Ocorreu um erro ao carregar seus pedidos.</p>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarPedidos);
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Finalizar Compra - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c1a15e">
+
+    <script src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="checkout-page"> <header>
+    <div class="header-left">
+        <div class="logo"><h1>Caminho Livre</h1></div>
+    </div>
+    <nav class="cabecalho-link">
+        <a href="index.html">Continuar a Comprar</a>
+    </nav>
+</header>
+
+<div id="main">
+    <main class="layout" style="grid-template-columns: 2fr 1fr; padding-top: 100px;">
+        <section class="produtos-section">
+            <h2>Seus Dados para Entrega</h2>
+            <form id="checkout-form" class="login-container" style="background: transparent; box-shadow: none; width: 100%; max-width: 100%; color: inherit; animation: none; padding: 0;">
+                <input type="hidden" id="endereco-id"> <div class="input-group"><input type="text" id="nome" placeholder="Nome Completo" required readonly></div>
+                <div class="input-group"><input type="email" id="email" placeholder="Email" required readonly></div>
+                <div class="input-group"><input type="text" id="endereco" placeholder="Endereço" required readonly></div>
+                
+                <p style="font-size: 0.8rem; margin-top: 10px;">Para alterar os seus dados, por favor, vá à sua página de perfil.</p>
+
+                <button type="submit" style="margin-top: 30px;">FINALIZAR COMPRA E PAGAR</button>
+                <button onclick="window.location.href='index.html'">VOLTAR</button>
+                <p id="form-message" style="margin-top: 15px;"></p>
+            </form>
+        </section>
+
+        <aside class="sidebar-produtos">
+            <h3>Resumo da Compra</h3>
+            <div id="resumo-carrinho">
+                </div>
+            <hr>
+            <div class="resumo-item total">
+                <span>Total:</span>
+                <span id="total-final">R$ 0,00</span>
+            </div>
+        </aside>
+    </main>
+</div>
+
+<script>
+        // Registro do service worker (parte do aplicativo)
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registado com sucesso:', registration);
+                })
+                .catch(registrationError => {
+                    console.log('Falha ao registar o Service Worker:', registrationError);
+                });
+        });
+    }
+    // Função principal que carrega todos os dados necessários na página
+    async function carregarCheckout() {
+        try {
+            // 1. Busca os dados do carrinho
+            const responseCarrinho = await fetch('buscarCarrinho.php');
+            const itensCarrinho = await responseCarrinho.json();
+
+            if (itensCarrinho.status === 'erro' || itensCarrinho.length === 0) {
+                alert(itensCarrinho.mensagem || 'O seu carrinho está vazio. A redirecionar...');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 2. Busca os dados do utilizador (incluindo o endereço)
+            const responseUsuario = await fetch('buscarUsuario.php'); // Assumindo que buscarUsuario.php busca o utilizador logado
+            const dadosUsuario = await responseUsuario.json();
+            
+            if (dadosUsuario.erro) {
+                alert('Sessão expirada ou utilizador não encontrado. Por favor, faça login novamente.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 3. Preenche o resumo da compra e calcula o total
+            const resumoContainer = document.getElementById('resumo-carrinho');
+            let total = 0;
+            resumoContainer.innerHTML = '';
+            itensCarrinho.forEach(item => {
+                const itemTotal = item.preco * item.quantidade;
+                total += itemTotal;
+                resumoContainer.innerHTML += `
+                    <div class="resumo-item">
+                        <span>${item.quantidade}x ${item.nome}</span>
+                        <span>R$ ${itemTotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('total-final').textContent = `R$ ${total.toFixed(2)}`;
+
+            // 4. Preenche o formulário com os dados do utilizador
+            document.getElementById('nome').value = dadosUsuario.nome;
+            document.getElementById('email').value = dadosUsuario.email;
+            document.getElementById('endereco').value = `${dadosUsuario.logradouro}, ${dadosUsuario.numero} - ${dadosUsuario.bairro}, ${dadosUsuario.cidade}`;
+            document.getElementById('endereco-id').value = dadosUsuario.endereco_id;
+
+        } catch (error) {
+            console.error('Erro fatal ao carregar o checkout:', error);
+            alert('Ocorreu um erro inesperado. Tente novamente.');
+        }
+    }
+
+    // Evento de submissão do formulário
+    document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Impede o envio tradicional do formulário
+        const formMessage = document.getElementById('form-message');
+        formMessage.textContent = 'A processar o seu pedido...';
+
+        const dadosCompra = {
+            total: parseFloat(document.getElementById('total-final').textContent.replace('R$ ', '')),
+            endereco_id: document.getElementById('endereco-id').value
+        };
+
+        try {
+            const response = await fetch('comprarAgora.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosCompra)
+            });
+
+            const resultado = await response.json();
+            alert(resultado.mensagem);
+
+            if (resultado.status === 'sucesso') {
+                window.location.href = 'index.html'; // Redireciona para a página inicial após a compra
+            } else {
+                formMessage.textContent = resultado.mensagem;
+            }
+        } catch (error) {
+            console.error('Erro ao finalizar a compra:', error);
+            formMessage.textContent = 'Erro de comunicação com o servidor.';
+        }
+    });
+
+    // Carrega tudo quando a página é aberta
+    document.addEventListener('DOMContentLoaded', carregarCheckout);
+</script>
+
+</body>
+</html>

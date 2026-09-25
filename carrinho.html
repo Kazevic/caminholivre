@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Meu Carrinho - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet"/>
+    <script src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+<header>
+    <div class="header-left">
+        <button class="darkmode-btn" id="darkModeToggle"><ion-icon name="moon-outline"></ion-icon></button>
+        <div class="logo"><h1>Caminho Livre</h1></div>
+    </div>
+    <nav class="cabecalho-link">
+        <a href="index.html">Início</a> <a href="acessorios.html">Acessórios</a> <a href="calcados.html">Calçados</a>
+    </nav>
+    <div class="icon"><a href="carrinho.html"><ion-icon name="cart-outline"></ion-icon></a></div>
+</header>
+<div id="main">
+    <main class="layout" style="grid-template-columns: 2fr 1fr; padding-top: 100px;">
+        <section class="produtos-section">
+            <h2>Meu Carrinho de Compras</h2>
+            <div id="lista-carrinho" class="carrinho-lista">
+                </div>
+        </section>
+
+        <aside class="sidebar-produtos">
+            <h3>Resumo do Pedido</h3>
+            <div class="resumo-item">
+                <span>Subtotal:</span>
+                <span id="subtotal">R$ 0,00</span>
+            </div>
+            <div class="resumo-item">
+                <span>Frete:</span>
+                <span>Grátis</span>
+            </div>
+            <hr style="border: 1px solid #eee; margin: 1rem 0;">
+            <div class="resumo-item total">
+                <span>Total:</span>
+                <span id="total">R$ 0,00</span>
+            </div>
+            <button id="btn-finalizar-compra" class="tab-btn active" style="width: 100%; margin-top: 20px;">Finalizar Compra</button>
+            <button id="btn-cancelar-compra" class="tab-btn" style="width: 100%; margin-top: 10px; background: transparent; border: 2px solid #aaa; color: #aaa;">Esvaziar Carrinho</button>
+            <button onclick="window.location.href='index.html'" id="btn-voltar-inicio" class="tab-btn active" style="width: 100%; margin-top: 20px;">Voltar</button>
+        </aside>
+    </main>
+</div>
+
+<script>
+    // ====================================================
+    // MODO ESCURO
+    // ====================================================
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    if (darkModeToggle) {
+        const icon = darkModeToggle.querySelector("ion-icon");
+        function atualizarIcone() {
+            const isDarkMode = document.body.classList.contains("dark-mode");
+            icon.setAttribute("name", isDarkMode ? "sunny-outline" : "moon-outline");
+        }
+        darkModeToggle.addEventListener("click", () => {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+            atualizarIcone();
+        });
+        if (localStorage.getItem("darkMode") === "true") {
+            document.body.classList.add("dark-mode");
+        }
+        atualizarIcone();
+    }
+
+    // ====================================================
+    // LÓGICA DO CARRINHO (ATUALIZADA)
+    // ====================================================
+    async function carregarCarrinho() {
+        try {
+            const response = await fetch('buscarCarrinho.php');
+            const data = await response.json();
+            const container = document.getElementById('lista-carrinho');
+            const btnFinalizar = document.getElementById('btn-finalizar-compra');
+            const btnCancelar = document.getElementById('btn-cancelar-compra');
+
+            if (data.status === 'erro') {
+                container.innerHTML = `<p>${data.mensagem}</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            let subtotal = 0;
+
+            if (data.length === 0) {
+                container.innerHTML = '<p>O seu carrinho está vazio.</p>';
+                // Desabilita os botões se o carrinho estiver vazio
+                if(btnFinalizar) btnFinalizar.style.display = 'none';
+                if(btnCancelar) btnCancelar.style.display = 'none';
+            } else {
+                if(btnFinalizar) btnFinalizar.style.display = 'block';
+                if(btnCancelar) btnCancelar.style.display = 'block';
+
+                data.forEach(item => {
+                    const itemTotal = item.preco * item.quantidade;
+                    subtotal += itemTotal;
+                    // --- TEMPLATE HTML ATUALIZADO COM SELETOR DE QUANTIDADE ---
+                    container.innerHTML += `
+                        <div class="carrinho-item">
+                            <img src="${item.imagens[0].url}" alt="${item.nome}">
+                            <div class="item-info">
+                                <p class="item-nome">${item.nome}</p>
+                                <p class="item-preco">R$ ${parseFloat(item.preco).toFixed(2)}</p>
+                            </div>
+                            <div class="item-qtd">
+                                <input type="number" value="${item.quantidade}" min="1" 
+                                       onchange="atualizarQuantidade(${item.carrinho_id}, this.value)"
+                                       style="width: 60px; padding: 5px; text-align: center;">
+                            </div>
+                            <div class="item-total">
+                                <p>R$ ${itemTotal.toFixed(2)}</p>
+                            </div>
+                            <button class="item-remover" title="Remover Item" onclick="removerItem(${item.carrinho_id})">
+                                &times;
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('subtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+            document.getElementById('total').textContent = `R$ ${subtotal.toFixed(2)}`;
+
+        } catch (error) {
+            console.error('Erro ao carregar carrinho:', error);
+            document.getElementById('lista-carrinho').innerHTML = '<p>Ocorreu um erro ao carregar o seu carrinho.</p>';
+        }
+    }
+    
+    // --- NOVA FUNÇÃO PARA ATUALIZAR A QUANTIDADE ---
+    async function atualizarQuantidade(carrinhoId, novaQuantidade) {
+        try {
+            const response = await fetch('atualizarCarrinho.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    carrinho_id: carrinhoId,
+                    quantidade: parseInt(novaQuantidade) // Garante que é um número
+                })
+            });
+            const data = await response.json();
+            if (data.status === 'sucesso') {
+                carregarCarrinho(); // Atualiza a visualização do carrinho para mostrar novos totais
+            } else {
+                alert(data.mensagem);
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar quantidade:', error);
+        }
+    }
+
+    async function removerItem(carrinhoId) {
+        if (!confirm('Deseja realmente remover este item do carrinho?')) return;
+
+        try {
+            const response = await fetch('removerCarrinho.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ carrinho_id: carrinhoId })
+            });
+            const data = await response.json();
+            if (data.status === 'sucesso') {
+                carregarCarrinho(); // Atualiza a visualização do carrinho
+            } else {
+                alert(data.mensagem);
+            }
+        } catch (error) {
+            console.error('Erro ao remover item:', error);
+        }
+    }
+    
+    // --- NOVA FUNÇÃO PARA ESVAZIAR O CARRINHO ---
+    async function esvaziarCarrinho() {
+        if (!confirm('Tem certeza que deseja remover todos os itens do carrinho?')) return;
+        
+        try {
+            const response = await fetch('limparCarrinho.php', { method: 'POST' });
+            const data = await response.json();
+            if (data.status === 'sucesso') {
+                carregarCarrinho(); // Atualiza a tela, que agora mostrará o carrinho vazio
+            } else {
+                alert(data.mensagem);
+            }
+        } catch (error) {
+            console.error('Erro ao esvaziar o carrinho:', error);
+        }
+    }
+
+    document.getElementById('btn-finalizar-compra').addEventListener('click', () => {
+        window.location.href = 'checkout.html';
+    });
+    
+    // Adiciona o evento de clique ao novo botão
+    document.getElementById('btn-cancelar-compra').addEventListener('click', esvaziarCarrinho);
+
+    document.addEventListener('DOMContentLoaded', carregarCarrinho);
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar-se - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c1a15e">
+
+</head>
+<body class="login-page">
+<div class="login-container" style="width: 500px; padding: 40px;">
+    <h2>Crie sua Conta</h2>
+    <form id="registro-form">
+        <div class="input-group"><input id="nome" placeholder="Nome Completo" required type="text"></div>
+        <div class="input-group"><input id="email" placeholder="E-mail" required type="email"></div>
+        <div class="input-group"><input id="senha" placeholder="Senha" required type="password"></div>
+
+        <div class="input-group"><input id="cep" placeholder="CEP (apenas números)" required type="text" maxlength="8"></div>
+        <div class="input-group"><input id="logradouro" placeholder="Rua / Logradouro" required type="text"></div>
+        <div class="input-group"><input id="numero" placeholder="Número" required type="text"></div>
+        <div class="input-group"><input id="bairro" placeholder="Bairro" required type="text"></div>
+        <div class="input-group"><input id="cidade" placeholder="Cidade" required type="text"></div>
+        <div class="input-group"><input id="estado" placeholder="Estado" required type="text"></div>
+        
+        <button type="submit">CRIAR CONTA</button>
+        <p id="error-message" style="margin-top: 15px;"></p>
+        <p style="margin-top: 10px;">Já tem uma conta? <a href="login.html" style="color: #c1a15e;">Faça login</a></p>
+    </form>
+        <a href="index.html" style="color: #c1a15e; display: block; margin-top: 30px; text-decoration: none;">&larr; Voltar para o site</a>
+</div>
+
+<script>
+        // Registro do service worker (parte do aplicativo)
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registado com sucesso:', registration);
+                })
+                .catch(registrationError => {
+                    console.log('Falha ao registar o Service Worker:', registrationError);
+                });
+        });
+    }
+    // Script para auto-completar endereço com ViaCEP
+    document.getElementById('cep').addEventListener('blur', function() {
+        const cep = this.value.replace(/\D/g, '');
+        if (cep.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.erro) {
+                        document.getElementById('logradouro').value = data.logradouro;
+                        document.getElementById('bairro').value = data.bairro;
+                        document.getElementById('cidade').value = data.localidade;
+                        document.getElementById('estado').value = data.uf;
+                    }
+                })
+                .catch(() => alert("Erro ao consultar o CEP."));
+        }
+    });
+
+    // Script para enviar o formulário de registro
+    document.getElementById('registro-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const errorMsg = document.getElementById('error-message');
+        
+        const dados = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('senha').value,
+            cep: document.getElementById('cep').value,
+            logradouro: document.getElementById('logradouro').value,
+            numero: document.getElementById('numero').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+        };
+
+        fetch('registrar.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'sucesso') {
+                alert(data.mensagem);
+                window.location.href = 'login.html'; // Redireciona para a página de login
+            } else {
+                errorMsg.textContent = data.mensagem;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            errorMsg.textContent = 'Ocorreu um erro ao tentar se registrar.';
+        });
+    });
+</script>
+</body>
+</html>

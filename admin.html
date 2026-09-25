@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Administrador - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c1a15e">
+    <style>
+        .product-list-admin { margin-top: 40px; }
+        .product-item-admin { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .product-item-admin img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+        .product-item-admin .info { flex-grow: 1; color: #fff; }
+        .btn-excluir { background: #ff4c4c; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body class="login-page">
+<div id="admin-panel" class="login-container" style="width: 600px; padding: 40px; display: none; max-height: 90vh; overflow-y: auto;">
+    <h2>Adicionar Novo Produto</h2>
+    <form id="add-product-form" enctype="multipart/form-data">
+        <div class="input-group"><input name="nome" placeholder="Nome do Produto" required type="text"></div>
+        <div class="input-group"><textarea name="descricao" placeholder="Descrição do Produto" required style="width: 100%; padding: 10px; font-family: inherit; background: #1f1f1f; color: #f1f1f1; border: none; border-radius: 8px;"></textarea></div>
+        <div class="input-group"><input name="preco" placeholder="Preço (ex: 99.90)" required type="number" step="0.01"></div>
+        <div class="input-group"><input name="estoque" placeholder="Quantidade em Estoque" required type="number"></div>
+        <div class="input-group">
+            <select name="categoria_id" required style="width: 100%; padding: 12px; background: #1f1f1f; color: #f1f1f1; border: none; border-radius: 8px;">
+                <option value="">Selecione a Categoria</option>
+            </select>
+        </div>
+        <div class="input-group" style="color: #fff;">
+            <label for="imagem">Imagem do Produto:</label>
+            <input id="imagem" required type="file" accept="image/jpeg, image/png, image/webp" style="padding: 12px; background: #1f1f1f; border-radius: 8px;">
+        </div>
+        <button type="submit">ADICIONAR PRODUTO</button>
+        <p id="form-message" style="margin-top: 15px;"></p>
+    </form>
+    
+    <div class="product-list-admin">
+        <hr style="border-color: #444; margin: 30px 0;">
+        <h2>Gerir Produtos Existentes</h2>
+        <div id="lista-produtos-admin">
+            </div>
+    </div>
+    <div class="product-list-admin">
+    <hr style="border-color: #444; margin: 30px 0;">
+    <h2>Gerir Pedidos de Clientes</h2>
+    <div id="lista-pedidos-admin">
+        </div>
+</div>
+    <a href="index.html" style="color: #c1a15e; display: block; margin-top: 30px; text-decoration: none;">&larr; Voltar para o site</a>
+</div>
+
+<script>
+    const formMessage = document.getElementById('form-message');
+
+    async function verificarAdmin() {
+        try {
+            const response = await fetch('verificarAdmin.php');
+            const data = await response.json();
+            if (data.status === 'sucesso' && data.isAdmin) {
+                document.getElementById('admin-panel').style.display = 'block';
+                const select = document.querySelector('select[name="categoria_id"]');
+                data.categorias.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
+                });
+                // Carrega ambas as listas
+                carregarProdutosParaGerir();
+                carregarPedidosAdmin(); // <<-- Chamada para a nova função
+            } else {
+                alert('Acesso negado.');
+                window.location.href = 'index.html';
+            }
+        } catch (error) {
+            window.location.href = 'index.html';
+        }
+    }
+
+    async function carregarProdutosParaGerir() {
+        try {
+            const response = await fetch('buscarProdutosAdmin.php');
+            const produtos = await response.json();
+            const container = document.getElementById('lista-produtos-admin');
+            container.innerHTML = '';
+            
+            if (produtos.status === 'erro') {
+                container.innerHTML = `<p style="color: #ff4c4c;">${produtos.mensagem}</p>`;
+                return;
+            }
+
+            produtos.forEach(p => {
+                container.innerHTML += `
+                    <div class="product-item-admin" id="produto-item-${p.id}">
+                        <img src="${p.imagens[0].url}" alt="${p.nome}">
+                        <div class="info">
+                            <strong>${p.nome}</strong><br>
+                            <span>Preço: R$ ${p.preco} | Estoque: ${p.estoque}</span>
+                        </div>
+                        <button class="btn-excluir" data-id="${p.id}">Excluir</button>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error('Erro ao carregar produtos:', error);
+        }
+    }
+
+    document.getElementById('add-product-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        formMessage.textContent = 'A enviar...';
+        try {
+            const response = await fetch('adicionarProduto.php', { method: 'POST', body: formData });
+            const data = await response.json();
+            formMessage.textContent = data.mensagem;
+            if (data.status === 'sucesso') {
+                this.reset();
+                carregarProdutosParaGerir();
+            }
+        } catch (error) {
+            formMessage.textContent = 'Erro ao enviar o produto.';
+        }
+    });
+    
+    document.getElementById('lista-produtos-admin').addEventListener('click', async function(e) {
+        if (e.target && e.target.classList.contains('btn-excluir')) {
+            const produtoId = e.target.getAttribute('data-id');
+            if (confirm(`Tem a certeza de que deseja excluir o produto com ID ${produtoId}? Esta ação é irreversível.`)) {
+                try {
+                    const response = await fetch('excluirProduto.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ produto_id: produtoId })
+                    });
+                    const data = await response.json();
+                    alert(data.mensagem);
+                    if (data.status === 'sucesso') {
+                        carregarProdutosParaGerir();
+                    }
+                } catch (error) {
+                    alert('Erro ao comunicar com o servidor.');
+                }
+            }
+        }
+    });
+    
+    // --- FUNÇÕES DE GERENCIAMENTO DE PEDIDOS ---
+    async function carregarPedidosAdmin() {
+        try {
+            const response = await fetch('buscarTodosPedidos.php');
+            const pedidos = await response.json();
+            // CORREÇÃO: Apontando para o container correto 'lista-pedidos-admin'
+            const containerPedidos = document.getElementById('lista-pedidos-admin');
+            containerPedidos.innerHTML = '';
+
+            if (pedidos.status === 'erro') {
+                containerPedidos.innerHTML = `<p style="color: #ff4c4c;">${pedidos.mensagem}</p>`;
+                return;
+            }
+
+            const statuses = ['Processando', 'Em preparação', 'Enviado', 'Entregue'];
+            pedidos.forEach(p => {
+                let options = statuses.map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`).join('');
+                containerPedidos.innerHTML += `
+                    <div class="product-item-admin" style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center;">
+                        <div class="info">
+                            <strong>Pedido #${p.id}</strong><br>
+                            <span>Cliente: ${p.nome_cliente} | Total: R$ ${p.total}</span>
+                        </div>
+                        <div class="info">
+                            <span>Status Atual: <strong>${p.status}</strong></span>
+                        </div>
+                        <div>
+                            <select onchange="atualizarStatus(${p.id}, this.value)" style="padding: 8px; background: #333; color: #fff; border-radius: 5px;">
+                                ${options}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error('Erro ao carregar pedidos:', error);
+        }
+    }
+
+    async function atualizarStatus(pedidoId, novoStatus) {
+        try {
+            const response = await fetch('atualizarStatusPedido.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pedido_id: pedidoId, status: novoStatus })
+            });
+            const data = await response.json();
+            alert(data.mensagem);
+            if (data.status === 'sucesso') {
+                carregarPedidosAdmin();
+            }
+        } catch (error) {
+            alert('Erro ao comunicar com o servidor.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', verificarAdmin);
+</script>
+</body>
+</html>

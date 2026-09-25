@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Perfil - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet">
+    <script src="cep.js" type="module" defer></script>
+</head>
+<body class="login-page"> <div class="login-container" style="width: 500px; max-width: 95%;">
+    <h2>Editar Perfil</h2>
+    <form id="perfil-form">
+        <div class="input-group"><input type="text" id="nome" placeholder="Nome Completo" required></div>
+        <div class="input-group"><input type="email" id="email" placeholder="E-mail" required></div>
+        <hr style="border-color: #444; margin: 20px 0;">
+        <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 15px;">Deixe os campos de senha em branco para não a alterar.</p>
+        <div class="input-group"><input type="password" id="senha" placeholder="Nova Senha"></div>
+        <div class="input-group"><input type="password" id="confirmar_senha" placeholder="Confirmar Nova Senha"></div>
+        <hr style="border-color: #444; margin: 20px 0;">
+        <div class="input-group"><input type="text" id="cep" placeholder="CEP" required></div>
+        <div class="input-group"><input type="text" id="logradouro" placeholder="Endereço" required readonly></div>
+        <div class="input-group"><input type="text" id="numero" placeholder="Número" required></div>
+        <div class="input-group"><input type="text" id="bairro" placeholder="Bairro" required readonly></div>
+        <div class="input-group"><input type="text" id="cidade" placeholder="Cidade" required readonly></div>
+        <div class="input-group"><input type="text" id="estado" placeholder="Estado" required readonly></div>
+
+        <button type="submit">SALVAR ALTERAÇÕES</button>
+        <p id="form-message" style="margin-top: 15px;"></p>
+        <a href="index.html" style="color: #c1a15e; display: block; margin-top: 20px; text-decoration: none;">&larr; Voltar para o site</a>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // 1. Carregar os dados atuais do usuário e preencher o formulário
+        try {
+            const response = await fetch('buscarUsuario.php');
+            const data = await response.json();
+
+            if (data.erro) {
+                document.getElementById('form-message').textContent = data.erro;
+                return;
+            }
+
+            document.getElementById('nome').value = data.nome || '';
+            document.getElementById('email').value = data.email || '';
+            document.getElementById('cep').value = data.cep || '';
+            document.getElementById('logradouro').value = data.logradouro || '';
+            document.getElementById('numero').value = data.numero || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.cidade || '';
+            document.getElementById('estado').value = data.estado || '';
+        } catch (error) {
+            document.getElementById('form-message').textContent = 'Erro ao carregar seus dados.';
+        }
+    });
+
+    // 2. Lidar com o envio do formulário
+    document.getElementById('perfil-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formMessage = document.getElementById('form-message');
+        const senha = document.getElementById('senha').value;
+        const confirmarSenha = document.getElementById('confirmar_senha').value;
+
+        // Validação de senha
+        if (senha !== confirmarSenha) {
+            formMessage.textContent = 'As senhas não coincidem.';
+            return;
+        }
+
+        const dados = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            senha: senha, // Envia a senha (pode estar vazia)
+            cep: document.getElementById('cep').value,
+            logradouro: document.getElementById('logradouro').value,
+            numero: document.getElementById('numero').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+        };
+        
+        formMessage.textContent = 'A salvar...';
+
+        try {
+            const response = await fetch('atualizarPerfil.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+            const resultado = await response.json();
+            formMessage.textContent = resultado.mensagem;
+        } catch (error) {
+            formMessage.textContent = 'Erro de comunicação com o servidor.';
+        }
+    });
+</script>
+</body>
+</html>

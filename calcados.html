@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Calçados - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet"/>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c1a15e">
+
+    <script src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+</head>
+<body>
+<header>
+    <div class="header-left">
+        <button class="darkmode-btn" id="darkModeToggle"><ion-icon name="moon-outline"></ion-icon></button>
+        <button class="btn-sidebar" id="openSidebar">☰</button>
+        <div class="logo"><h1>Caminho Livre</h1></div>
+    </div>
+    <nav class="cabecalho-link">
+        <a href="index.html">Início</a>
+        <a href="acessorios.html">Acessórios</a>
+        <a href="calcados.html">Calçados</a>
+        <div id="nav-links-dinamicos" style="display: flex; gap: 2rem; align-items: center;"></div>
+        <a href="meus_pedidos.html">Meus Pedidos</a>
+    </nav>
+    <div class="icon">
+        <a href="carrinho.html" aria-label="Carrinho de Compras"><ion-icon name="cart-outline"></ion-icon></a>
+    </div>
+</header>
+<div class="sidebar" id="sidebar">
+    <a class="closebtn" href="javascript:void(0)" id="closeSidebar">&times;</a>
+    <a href="index.html"><ion-icon name="home"></ion-icon> Início</a>
+    <a href="acessorios.html"><ion-icon name="glasses"></ion-icon> Acessórios</a>
+    <a href="calcados.html"><span class="iconify" data-height="32" data-icon="mdi:shoe-sneaker"></span>Calçados</a>
+    <a href="index.html#produtos"><ion-icon name="shirt"></ion-icon> Roupas</a>
+    <a href="meus_pedidos.html"><ion-icon name="cube-outline"></ion-icon> Meus Pedidos</a>
+    <a href="sobre.html"><ion-icon name="information-circle-outline"></ion-icon> Sobre Nós</a>
+    <div class="sidebar-user" id="sidebar-user-links"></div>
+</div>
+<div id="main">
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Calçados</h1>
+            <p>Encontre os calçados que combinam com seu estilo</p>
+            <button onclick="window.location.href='#produtos'">Ver Produtos</button>
+        </div>
+    </section>
+    <main class="layout" id="produtos">
+        <section class="produtos-section">
+            <h2>Calçados</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="mostrarAba('Tênis', this)">Tênis</button>
+                <button class="tab-btn" onclick="mostrarAba('Botas', this)">Botas</button>
+                <button class="tab-btn" onclick="mostrarAba('Sandálias', this)">Sandálias</button>
+            </div>
+            <div class="aba-conteudo" id="aba-Tênis"><div class="produtos-list" id="lista-Tênis"></div></div>
+            <div class="aba-conteudo" id="aba-Botas" style="display:none;"><div class="produtos-list" id="lista-Botas"></div></div>
+            <div class="aba-conteudo" id="aba-Sandálias" style="display:none;"><div class="produtos-list" id="lista-Sandálias"></div></div>
+        </section>
+        <aside class="sidebar-produtos">
+            <h3>Mais Vendidos</h3>
+            <div id="mais-vendidos-lista"></div>
+        </aside>
+    </main>
+    <div class="modal" id="modal-produto">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <h2 id="modal-nome"></h2>
+            <h4 id="modal-preco"></h4>
+            <input id="cep" placeholder="Digite seu CEP" type="text"/>
+            <div class="botoes-modal">
+                <button>Comprar Agora</button> <button>Adicionar ao Carrinho</button>
+            </div>
+        </div>
+    </div>
+    <footer class="Contato" id="Contato">
+        <div class="meio-contato"><h3>Explorar</h3><li><a href="index.html">Início</a></li><li><a href="index.html">Destaques</a></li><li><a href="index.html">Novidades</a></li><li><a href="sobre.html">Sobre Nós</a></li></div>
+        <div class="meio-contato"><h3>Nossos Serviços</h3><li><a href="index.html">Frete Grátis</a></li></div>
+        <div class="meio-contato"><h3>Produtos</h3><li><a href="acessorios.html">Acessórios</a></li><li><a href="calcados.html">Calçados</a></li><li><a href="index.html#produtos">Roupas</a></li><li><a href="index.html">Promoções</a></li></div>
+    </footer>
+    <div class="last-text">Copyright © 2025 Caminho Livre</div>
+</div>
+<div class="chatbot-container" id="chatbot">
+    <div class="chatbot-header"><span>🤖 Ajuda</span><button class="chatbot-close" onclick="document.getElementById('chatbot').classList.remove('open')">&times;</button></div>
+    <div class="chatbot-messages" id="chatbotMessages">
+        <p><strong>Robô:</strong> Olá! Como posso te ajudar?</p>
+        <ul>
+            <li onclick="responderFAQ('login')">🔑 Como fazer login</li>
+            <li onclick="responderFAQ('comprar')">🛒 Como comprar produtos</li>
+            <li onclick="responderFAQ('produtos')">👕 Quero ver os produtos</li>
+        </ul>
+    </div>
+</div>
+<button class="chatbot-btn" onclick="document.getElementById('chatbot').classList.toggle('open')">🤖</button>
+
+<script>
+    // ====================================================
+    // FUNÇÕES DE CONTROLE DA INTERFACE
+    // ====================================================
+    function mostrarAba(id, btn) {
+        document.querySelectorAll('.aba-conteudo').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const aba = document.getElementById('aba-' + id);
+        if (aba) aba.style.display = 'block';
+        if (btn) btn.classList.add('active');
+        if (aba) carregarProdutosPorCategoria(id);
+    }
+    function abrirModal(nome, preco) {
+        const modal = document.getElementById('modal-produto');
+        document.getElementById('modal-nome').textContent = nome;
+        document.getElementById('modal-preco').textContent = 'R$ ' + parseFloat(preco).toFixed(2);
+        modal.classList.add('is-open'); // Adiciona a classe para mostrar
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-produto').classList.remove('is-open'); // Remove a classe para esconder
+    }
+    const sidebar = document.getElementById("sidebar"), openBtn = document.getElementById("openSidebar"), closeBtn = document.getElementById("closeSidebar"), main = document.getElementById("main");
+    if(openBtn) openBtn.addEventListener("click", () => { sidebar.style.width = "250px"; if (main) main.style.marginLeft = "250px"; });
+    if(closeBtn) closeBtn.addEventListener("click", () => { sidebar.style.width = "0"; if (main) main.style.marginLeft = "0"; });
+    if(sidebar) sidebar.addEventListener("mouseleave", () => { sidebar.style.width = "0"; if (main) main.style.marginLeft = "0"; });
+    
+    // ====================================================
+    // MODO ESCURO
+    // ====================================================
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    if (darkModeToggle) {
+        const icon = darkModeToggle.querySelector("ion-icon");
+        const DOMElements = { body: document.body, icon: darkModeToggle.querySelector("ion-icon") };
+        function atualizarIcone() {
+            const isDarkMode = DOMElements.body.classList.contains("dark-mode");
+            DOMElements.icon.setAttribute("name", isDarkMode ? "sunny-outline" : "moon-outline");
+        }
+        darkModeToggle.addEventListener("click", () => {
+            DOMElements.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", DOMElements.body.classList.contains("dark-mode"));
+            atualizarIcone();
+        });
+        if (localStorage.getItem("darkMode") === "true") { DOMElements.body.classList.add("dark-mode"); }
+        atualizarIcone();
+    }
+
+    // ====================================================
+    // LÓGICA DO MODAL (CARRINHO E COMPRA) - ATUALIZADA
+    // ====================================================
+    
+    // Botão "Comprar Agora"
+    document.querySelector('.botoes-modal button:first-child').addEventListener('click', () => {
+        const nomeProduto = document.getElementById('modal-nome').textContent;
+
+        // Passo 1: Adicionar o produto ao carrinho
+        fetch('adicionarCarrinho.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: nomeProduto })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Passo 2: Verificar se a adição foi bem-sucedida
+            if (data.status === 'sucesso') {
+                // Passo 3: Se teve sucesso, redirecionar para o checkout
+                window.location.href = 'checkout.html';
+            } else {
+                // Se falhou (ex: não está logado), mostra a mensagem de erro
+                alert(data.mensagem);
+            }
+        })
+        .catch(err => {
+            console.error('Erro:', err);
+            alert('Ocorreu um erro de comunicação. Tente novamente.');
+        });
+    });
+    
+    // Botão "Adicionar ao Carrinho" (continua o mesmo)
+    document.querySelector('.botoes-modal button:last-child').addEventListener('click', () => {
+        fetch('adicionarCarrinho.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: document.getElementById('modal-nome').textContent })
+        }).then(res => res.json()).then(data => {
+            alert(data.mensagem);
+            if (data.status === 'sucesso') fecharModal();
+        }).catch(err => console.error('Erro:', err));
+    });
+
+    // ====================================================
+    // FUNÇÕES DE DADOS E RENDERIZAÇÃO
+    // ====================================================
+    function renderizarProdutos(produtos, container, template) {
+        if (!container) return;
+        container.innerHTML = produtos && produtos.length > 0
+            ? produtos.map(template).join('')
+            : `<p style="text-align:center; width:100%;">Nenhum produto encontrado.</p>`;
+    }
+    async function carregarDados(url, container, template) {
+        if (!container) return;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+            const produtos = await response.json();
+            if (produtos.erro) throw new Error(produtos.detalhes || produtos.erro);
+            renderizarProdutos(produtos, container, template);
+        } catch (error) {
+            console.error(`Falha ao buscar dados de ${url}:`, error);
+            container.innerHTML = `<p style="text-align:center; width:100%;">Erro ao carregar produtos.</p>`;
+        }
+    }
+    function carregarProdutosPorCategoria(categoria) {
+        const container = document.getElementById(`lista-${categoria}`);
+        const template = p => `<div class="produto" onclick="abrirModal('${p.nome}', '${p.preco}')"><img alt="${p.nome}" src="${p.imagens[0].url}"/><p>${p.nome}</p><h5>R$ ${parseFloat(p.preco).toFixed(2)}</h5></div>`;
+        carregarDados(`buscarProdutos.php?tipo=categoria&categoria_nome=${encodeURIComponent(categoria)}`, container, template);
+    }
+    function carregarMaisVendidos() {
+        const container = document.getElementById("mais-vendidos-lista");
+        const template = p => `<div class="sidebar-produto produto" onclick="abrirModal('${p.nome}', '${p.preco}')"><img src="${p.imagens[0].url}" alt="${p.nome}"/><p>${p.nome}</p><span>R$ ${parseFloat(p.preco).toFixed(2)}</span></div>`;
+        carregarDados('buscarProdutos.php?tipo=mais_vendidos', container, template);
+    }
+    function carregarDestaques() {
+        const destaquesContainer = document.getElementById("destaques-lista");
+        const destaqueTemplate = p => `<div class="destaque-item" onclick="abrirModal('${p.nome}', '${p.preco}')"><img alt="${p.nome}" src="${p.imagens[0].url}"/><h3>${p.nome}</h3><p>R$ ${parseFloat(p.preco).toFixed(2)}</p></div>`;
+        carregarDados(`buscarProdutos.php?tipo=categoria&categoria_nome=Verão`, destaquesContainer, destaqueTemplate);
+    }
+    async function atualizarCabecalhoUsuario() {
+        try {
+            const response = await fetch('verificarSessao.php');
+            const data = await response.json();
+            const desktop = document.getElementById('nav-links-dinamicos');
+            const mobile = document.getElementById('sidebar-user-links');
+            if (data.logado) {
+                let admin = data.role === 'admin' ? '<a href="admin.html" style="color: #FFD700;">Painel Admin</a>' : '';
+                if (desktop) desktop.innerHTML = `${admin} <span style="color: #ccc; align-self: center;">Olá, ${data.nome}</span> <a href="logout.php">Sair</a>`;
+                if (mobile) mobile.innerHTML = `${admin} <a href="logout.php"><ion-icon name="log-out-outline"></ion-icon> Sair</a>`;
+            } else {
+                if (desktop) desktop.innerHTML = '<a href="login.html">Registrar-se</a>';
+                if (mobile) mobile.innerHTML = '<a href="login.html"><ion-icon name="person-outline"></ion-icon> Registrar-se</a>';
+            }
+        } catch (error) { console.error('Erro ao verificar a sessão:', error); }
+    }
+
+    // ====================================================
+    // FUNÇÃO DO CHATBOT
+    // ====================================================
+    function responderFAQ(opcao) {
+        const chat = document.getElementById("chatbotMessages");
+        if (!chat) return;
+        let resposta = "";
+        if (opcao === "login") resposta = "<p><strong>Robô:</strong> Para fazer login ou se registrar, clique em <em>'Registrar-se'</em>.</p>";
+        else if (opcao === "comprar") resposta = "<p><strong>Robô:</strong> Clique num produto e use os botões <em>'Comprar Agora'</em> ou <em>'Adicionar ao Carrinho'</em>.</p>";
+        else if (opcao === "produtos") resposta = "<p><strong>Robô:</strong> Use a navegação para explorar as nossas Roupas, Calçados e Acessórios.</p>";
+        const novaMensagem = document.createElement('div');
+        novaMensagem.innerHTML = resposta;
+        chat.appendChild(novaMensagem);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    // ====================================================
+    // CARREGAMENTO INICIAL DA PÁGINA
+    // ====================================================
+    document.addEventListener("DOMContentLoaded", () => {
+        const pagina = window.location.pathname.split("/").pop();
+        const activeTab = document.querySelector('.tab-btn.active');
+        
+        if (document.getElementById('mais-vendidos-lista')) carregarMaisVendidos();
+        if (document.getElementById('nav-links-dinamicos')) atualizarCabecalhoUsuario();
+
+        if (pagina.includes('acessorios.html')) {
+            if (activeTab) mostrarAba('Relógios', activeTab);
+        } else if (pagina.includes('calcados.html')) {
+            if (activeTab) mostrarAba('Tênis', activeTab);
+        } else {
+            if (activeTab) mostrarAba('Verão', activeTab);
+            if (document.getElementById('destaques-lista')) carregarDestaques();
+        }
+    });
+</script>
+</body>
+</html>

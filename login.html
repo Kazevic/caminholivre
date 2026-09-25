@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Caminho Livre</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c1a15e">
+
+</head>
+<body class="login-page">
+<div class="login-container">
+    <div class="avatar"><span>&#128100;</span></div>
+    <h2>Login</h2>
+    <form id="login-form">
+        <div class="input-group"><input id="email" placeholder="E-mail" required type="email"></div>
+        <div class="input-group"><input id="password" placeholder="Senha" required type="password"></div>
+        <button type="submit">ENTRAR</button>
+        <p id="error-message" style="margin-top: 15px;"></p>
+        <p style="margin-top: 10px;">Não tem uma conta? <a href="registrar.html" style="color: #c1a15e;">Registre-se</a></p>
+    </form>
+        <a href="index.html" style="color: #c1a15e; display: block; margin-top: 30px; text-decoration: none;">&larr; Voltar para o site</a>
+</div>
+
+<script>
+        // Registro do service worker (parte do aplicativo)
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registado com sucesso:', registration);
+                })
+                .catch(registrationError => {
+                    console.log('Falha ao registar o Service Worker:', registrationError);
+                });
+        });
+    }
+document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const errorMsg = document.getElementById('error-message');
+    
+    const dados = {
+        email: document.getElementById('email').value,
+        senha: document.getElementById('password').value
+    };
+
+    fetch('login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'sucesso') {
+            window.location.href = 'index.html'; // Redireciona para a página principal
+        } else {
+            errorMsg.textContent = data.mensagem;
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        errorMsg.textContent = 'Ocorreu um erro ao tentar fazer login.';
+    });
+});
+</script>
+</body>
+</html>
